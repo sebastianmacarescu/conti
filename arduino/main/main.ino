@@ -45,6 +45,8 @@ Sonar* mysonar;
 NewPing leftSonar(TRIGGER_LEFT, ECHO_LEFT, Sonar::MAX_DISTANCE);
 NewPing rightSonar(TRIGGER_RIGHT, ECHO_RIGHT, Sonar::MAX_DISTANCE);
 
+void oneSensorCycle();
+
 void setupBlueSerial() {
 	blueSerial.begin(115200);  // The Bluetooth Mate defaults to 115200bps
   blueSerial.print("$");  // Print three times individually
@@ -71,10 +73,10 @@ void setup(){
 	//Comment this line to receive commands over standard serial
 	bCmd.setSoftwareSerial(&blueSerial);
 	
-	// mysonar = new Sonar(oneSensorCycle);
-	// mysonar->addSonar(TRIGGER_LEFT, ECHO_LEFT);
-	// mysonar->addSonar(TRIGGER_RIGHT, ECHO_RIGHT);
-	// mysonar->init();
+	mysonar = new Sonar(oneSensorCycle);
+	mysonar->addSonar(TRIGGER_LEFT, ECHO_LEFT);
+	mysonar->addSonar(TRIGGER_RIGHT, ECHO_RIGHT);
+	mysonar->init();
 
 	//Init other things
 	steeringMotor = new DCMotor(steeringEn, steeringA, steeringB);
@@ -89,7 +91,7 @@ void loop(){
 	bCmd.readBus();
 	if(bCmd.isReadyToParse())
 		bCmd.Parse();
-	//mysonar->checkSonar();
+	mysonar->checkSonar();
 	//replace delay with static member millis
 	//oneSensorCycle();
 	steeringMotor->update();

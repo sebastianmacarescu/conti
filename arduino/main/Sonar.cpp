@@ -27,7 +27,7 @@ void Sonar::init() {
 }
 
 void Sonar::checkSonar() {
-	Serial.println(SONAR_NUM);
+	//Serial.println(SONAR_NUM);
 	for (uint8_t i = 0; i < SONAR_NUM; i++) { // Loop through all the sensors.
 	  if (millis() >= pingTimer[i]) {         // Is it this sensor's time to ping?
 	    pingTimer[i] += PING_INTERVAL * SONAR_NUM;  // Set next time this sensor will be pinged.
@@ -50,11 +50,22 @@ void Sonar::echoCheck(){
 
 void Sonar::oneSensorCycle(){
 	// Sensor ping cycle complete, do something with the results.
-	if(MedianFilter == true){
-		if(Measurements <= FILTER_SIZE)
-		  updateFilter();
-		else ReplaceMeasurements();
-	} 
+	
+	if(Measurements <= FILTER_SIZE)
+	  updateFilter();
+	else ReplaceMeasurements();
+  
+  switch(FilterType) {
+    case 0:
+      BasicFilter();
+    break;
+    case 1:
+      MedianFilter();
+    break;
+    case 2:
+      IQRMedianFilter();
+    break;
+  }
 }
 
 void Sonar::updateFilter(){
@@ -79,6 +90,50 @@ void Sonar::ReplaceMeasurements(){
 	        sorted = false;
 	      }
 	}
-	for(i = 0; i < SONAR_NUM; i++)
-	  cm[i] =  FilterMeasurments[i][FILTER_SIZE / 2];
 }
+
+void Sonar::MedianFilter() {
+  for(int i = 0; i < SONAR_NUM; i++)
+    cm[i] =  FilterMeasurments[i][FILTER_SIZE / 2];
+}
+
+void Sonar::IQRMedianFilter() {
+  int i, j;
+  int q1, q3, iqr, l1, l2;
+  int tmp[FILTER_SIZE], tmpLength = 0;
+  for(i = 0; i < SONAR_NUM; i++) {
+    
+    q1 = FilterMeasurments[i][FILTER_SIZE/4];
+    q3 = FilterMeasurments[i][FILTER_SIZE*3/4];
+    iqr = q3 - q1;
+    l1 = q1 - 1.5 * iqr;
+    l2 = q3 - 1.5 * iqr;  
+    
+    for(j = 0; j < FILTER_SIZE; j++) {
+      
+      if(FilterMeasurments[i][j] < l2 && FilterMeasurments[i][j] > l1) {
+        tmp[tmpLength++] = FilterMeasurments[i][j];
+      }
+      
+    }
+    cm[i] =  tmp[tmpLength / 2];
+  }
+}
+
+void Sonar::BasicFilter() {
+  for(int i = 0; i < SONAR_NUM; i++){
+    
+    if(cm[i] <= BASIC_MAX_DISTANCE) {
+      FilterMeasurments[i][0] = cm[i];
+    } 
+    else if (FilterMeasurments[i][0] <= BASIC_MAX_DISTANCE) {
+      cm[i] = FilterMeasurments[i][0];
+    } 
+    else {
+      cm[i] = BASIC_MAX_DISTANCE;
+      FilterMeasurments[i][0] = BASIC_MAX_DISTANCE;
+    }
+    
+  }
+}
+
