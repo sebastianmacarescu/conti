@@ -13,17 +13,39 @@ class Line:
         self.x2 = x2
         self.y2 = y2
         self.length = math.sqrt(math.pow(x2 - x1, 2) + math.pow(y2 - y1, 2))
-        self.angle = np.arctan2(y1 - y2, x2 - x1) * 180 / np.pi
+        self.angle = np.arctan2(y2 - y1, x2 - x1) * 180 / np.pi
+
+        #make angle relative to y axis
+        if self.angle >= 0:
+            self.angle = 90 - self.angle
+        else:
+            self.angle = -90 - self.angle
 
     def __str__(self):
         return json.dumps(self.__dict__)
+        
+
+def distance(x1, y1, x2, y2):
+    return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+
+def line_min_dist(a, b):
+    dist = [
+        distance(a.x1, a.y1, b.x1, b.y1),
+        distance(a.x1, a.y1, b.x2, b.y2),
+        distance(a.x2, a.y2, b.x1, b.y1),
+        distance(a.x2, a.y2, b.x2, b.y2)
+    ]
+    return min(dist)
+
+def half(a, b):
+    return (a + b) / 2
 
 
 paused = False
 font = cv2.FONT_HERSHEY_SIMPLEX
 
 cap = capture.FileCapture('hol.mp4')
-# cap = capture.FileCapture('traseu2.mp4')
+# cap = capture.FileCapture('traseu1.mp4')
 # cap = capture.SocketCapture('192.168.88.21')
 # cap = capture.SocketCapture('192.168.1.2')
 cap.open()
@@ -49,7 +71,7 @@ while(cap.isOpened()):
     # cv2.imshow('frame', frame)
 
     height, width, channels = frame.shape
-    # frame = frame[400:height, 0:width]
+    frame = frame[400:height, 0:width]
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     gray = cv2.medianBlur(gray, 3)
@@ -74,61 +96,45 @@ while(cap.isOpened()):
     lines = cv2.HoughLinesP(edges, 1, np.pi/180, 50, minLineLength, maxLineGap)
 
     my_lines = []
-
     if lines is not None:
-
+        first = True
         for x1, y1, x2, y2 in lines[0]:
-            cv2.line(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
             line = Line(x1, y1, x2, y2)
             my_lines.append(line)
-        
-        lines_by_angle = {angle: [] for angle in range(-90, 90, 3)}
+            # if first is True:
+            cv2.line(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                # first = False
+                # print line.angle
 
-        for line in my_lines:
-            if int(line.angle) in lines_by_angle:
-                new_angle = int(line.angle)
-            elif int(line.angle) - 1 in lines_by_angle:
-                new_angle = int(line.angle) - 1
-            elif int(line.angle) + 1 in lines_by_angle:
-                new_angle = int(line.angle) + 1
-            lines_by_angle[new_angle].append(line)
-
-        idx = 0
-        colors = [
-            (255, 0, 0),
-            (0, 255, 0),
-            (0, 0, 255)
-        ]
-        min_len = 200
-        final_lines = []
-        for angle in lines_by_angle:
-            lines_by_angle[angle] = sorted(lines_by_angle[angle], key=lambda k: (-k.length, min(k.x1, k.x2)))
-            if len(lines_by_angle[angle]) > 0 and lines_by_angle[angle][0].length >= min_len:
-                best_line = lines_by_angle[angle][0]
-                # print best_line
-                # cv2.line(frame, (best_line.x1, best_line.y1), (best_line.x2, best_line.y2), colors[idx % 3], 5)
-                idx += 1
-                final_lines.append(best_line)
 
         avg_angle_sum = 0
         avg_angle = 0
-        for line in final_lines:
-            avg_angle_sum += line.angle
-        if len(final_lines) > 0:
-            avg_angle = avg_angle_sum / len(final_lines)
+        weights = []
+        for line in my_lines:
+            # if line.x1 < width / 2: continue
+            avg_angle_sum += line.angle * (line.length / 1000)
+            if line.length / 1000 not in weights:
+                weights.append(line.length / 1000)
+
+        if len(weights) > 0:
+            avg_angle = avg_angle_sum / sum(weights)
         else:
-            avg_angle = 90
+            avg_angle = 0
+        # avg_angle = -avg_angle
         print avg_angle
 
+        length = -(int)(10 * avg_angle)
         px1 = (int)(width / 2)
-        py1 = int(height)
-        length = 300
+        py1 = (int)(height / 2)
 
-        px2 = (int)(px1 + length * np.sin(avg_angle * np.pi / 180))
-        py2 = (int)(py1 + length * np.cos(avg_angle * np.pi / 180))
+        px2 = px1 + length
+        py2 = py1
 
-        py2 -= height
-        # cv2.line(frame, (px1, py1), (px2, py2), (0, 255, 0), 10)
+
+        # px2 = (int)(px1 + length * np.sin(avg_angle * np.pi / 180))
+        # py2 = (int)(py1 + length * np.cos(avg_angle * np.pi / 180))
+
+        cv2.line(frame, (px1, py1), (px2, py2), (0, 255, 0), 10)
         # cv2.putText(frame, str(avg_angle), (10,500), font, 3, (255, 255, 255), 2)
 
         # for i in range(0, 2):
@@ -152,8 +158,8 @@ while(cap.isOpened()):
 
     gray_c = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
     edges_c = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-    both = np.hstack((frame, gray_c, edges_c))
-    # both = np.hstack((frame, edges_c))
+    # both = np.hstack((frame, gray_c, edges_c))
+    both = np.hstack((frame, edges_c))
     window = cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
     cv2.imshow('frame', both)
     if cv2.waitKey(1) & 0xFF == ord('q'):
