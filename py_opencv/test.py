@@ -72,6 +72,7 @@ while(cap.isOpened()):
 
     height, width, channels = frame.shape
     frame = frame[400:height, 0:width]
+    height = height - 400
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     gray = cv2.medianBlur(gray, 3)
@@ -107,34 +108,48 @@ while(cap.isOpened()):
                 # print line.angle
 
 
-        avg_angle_sum = 0
-        avg_angle = 0
-        weights = []
-        for line in my_lines:
-            # if line.x1 < width / 2: continue
-            avg_angle_sum += line.angle * (line.length / 1000)
-            if line.length / 1000 not in weights:
-                weights.append(line.length / 1000)
+        rows = 6
+        int_w = height / rows
+        total_avg_sum = 0
+        for row in range(1, rows + 1):
 
-        if len(weights) > 0:
-            avg_angle = avg_angle_sum / sum(weights)
-        else:
+            avg_angle_sum = 0
             avg_angle = 0
-        # avg_angle = -avg_angle
-        print avg_angle
+            weights = []
+            for line in my_lines:
+                if line.y1 < (row - 1) * int_w or line.y1 > row * int_w: continue
+                avg_angle_sum += line.angle * (line.length / 1000)
+                if line.length / 1000 not in weights:
+                    weights.append(line.length / 1000)
 
-        length = -(int)(10 * avg_angle)
+            if len(weights) > 0:
+                avg_angle = avg_angle_sum / sum(weights)
+            else:
+                avg_angle = 0
+            # avg_angle = -avg_angle
+            # print avg_angle
+            total_avg_sum += avg_angle * (rows - row + 1)
+
+            length = -(int)(10 * avg_angle)
+            px1 = (int)(width / 2)
+            py1 = (int)((2 * row - 1) * int_w / 2)
+
+            px2 = px1 + length
+            py2 = py1
+
+            # px2 = (int)(px1 + length * np.sin(avg_angle * np.pi / 180))
+            # py2 = (int)(py1 + length * np.cos(avg_angle * np.pi / 180))
+
+            cv2.line(frame, (px1, py1), (px2, py2), (0, 255, 0), 5)
+        
+        total_avg_angle = total_avg_sum / ( rows * (rows + 2) / 2 )
+        print total_avg_angle
         px1 = (int)(width / 2)
         py1 = (int)(height / 2)
-
-        px2 = px1 + length
+        px2 = px1 - (int)(10 * total_avg_angle)
         py2 = py1
+        cv2.line(frame, (px1, py1), (px2, py2), (0, 0, 255), 10)
 
-
-        # px2 = (int)(px1 + length * np.sin(avg_angle * np.pi / 180))
-        # py2 = (int)(py1 + length * np.cos(avg_angle * np.pi / 180))
-
-        cv2.line(frame, (px1, py1), (px2, py2), (0, 255, 0), 10)
         # cv2.putText(frame, str(avg_angle), (10,500), font, 3, (255, 255, 255), 2)
 
         # for i in range(0, 2):
