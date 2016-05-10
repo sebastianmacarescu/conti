@@ -1,24 +1,16 @@
 import serial
 import multiprocessing
 
-# Change this to match your local settings
-SERIAL_PORT = '/dev/ttyUSB0'
-SERIAL_BAUDRATE = 9600
-
 
 class SerialProcess(multiprocessing.Process):
 
-    def __init__(self, input_queue, output_queue):
+    def __init__(self, input_queue, output_queue, SERIAL_PORT, BAUD_RATE=9600):
         multiprocessing.Process.__init__(self)
         self.input_queue = input_queue
         self.output_queue = output_queue
-        self.sp = serial.Serial(SERIAL_PORT, SERIAL_BAUDRATE, timeout=1)
-
-    def start(self):
-        super(SerialProcess, self).start()
-        while not self.is_connected():
-            pass
-        return 'Bluetooth connected'
+        self.SERIAL_PORT = SERIAL_PORT
+        self.BAUD_RATE = BAUD_RATE
+        self.sp = None
 
     def close(self):
         self.sp.close()
@@ -37,6 +29,9 @@ class SerialProcess(multiprocessing.Process):
         return self.sp.readline().replace("\n", "")
 
     def run(self):
+
+        self.connect()
+
         self.sp.flushInput()
         while True:
             # look for incoming tornado request
@@ -53,6 +48,14 @@ class SerialProcess(multiprocessing.Process):
             #     print "reading from serial: " + data
             #     # send it back to tornado
             # 	self.output_queue.put(data)
+
+    def connect(self):
+        while not self.is_connected():
+            try:
+                self.sp = serial.Serial(self.SERIAL_PORT, self.BAUD_RATE, timeout=1)
+                print 'Bluetooth connected'
+            except Exception as e:
+                print e
 
     def is_connected(self):
         try:
