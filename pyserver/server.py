@@ -19,7 +19,7 @@ from py_opencv import frame_process
 # logger.setLevel(multiprocessing.SUBDEBUG)
 
 define("port", default=8080, help="run on the given port", type=int)
-define("serial", default="\BthModem0", help="serial port for bluetooth", type=int)
+define("serial", default="COM10", help="serial port for bluetooth", type=str)
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 STATIC_ROOT = os.path.join(CURRENT_DIR, 'static')

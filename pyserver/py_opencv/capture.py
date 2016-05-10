@@ -56,8 +56,12 @@ class SocketCapture(FileCapture):
         self.last_frame = None
 
     def open(self):
-        self.camera_socket.connect((self.ip, 8080))
-        self.opened = True
+        try:
+            self.camera_socket.connect((self.ip, 8080))
+            self.opened = True
+            print "Camera socket connected"
+        except Exception as e:
+            self.opened = False
 
     def isOpened(self):
         return self.opened

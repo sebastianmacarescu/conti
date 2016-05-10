@@ -52,7 +52,7 @@ class SerialProcess(multiprocessing.Process):
     def connect(self):
         while not self.is_connected():
             try:
-                self.sp = serial.Serial(self.SERIAL_PORT, self.BAUDRATE, timeout=1)
+                self.sp = serial.Serial(self.SERIAL_PORT, self.BAUD_RATE, timeout=1)
                 print 'Bluetooth connected'
             except Exception as e:
                 print e
