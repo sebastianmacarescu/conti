@@ -23,10 +23,28 @@ class Line:
         return json.dumps(self.__dict__)
 
 
+def distance(x1, y1, x2, y2):
+    return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+
+
+def line_min_dist(a, b):
+    dist = [
+        distance(a.x1, a.y1, b.x1, b.y1),
+        distance(a.x1, a.y1, b.x2, b.y2),
+        distance(a.x2, a.y2, b.x1, b.y1),
+        distance(a.x2, a.y2, b.x2, b.y2)
+    ]
+    return min(dist)
+
+
+def half(a, b):
+    return (a + b) / 2
+
+
 def process_frame(frame):
     height, width, channels = frame.shape
-    frame = frame[400:height, 0:width]
-    height = height - 400
+    # frame = frame[400:height, 0:width]
+    # height = height - 400
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     gray = cv2.medianBlur(gray, 3)

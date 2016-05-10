@@ -19,6 +19,7 @@ from py_opencv import frame_process
 # logger.setLevel(multiprocessing.SUBDEBUG)
 
 define("port", default=8080, help="run on the given port", type=int)
+define("serial", default="\BthModem0", help="serial port for bluetooth", type=int)
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 STATIC_ROOT = os.path.join(CURRENT_DIR, 'static')
@@ -28,8 +29,8 @@ clients = []
 input_queue = multiprocessing.Queue()
 output_queue = multiprocessing.Queue()
 
-# video_cap = capture.SocketCapture('192.168.88.21')
-video_cap = capture.FileCapture('py_opencv\\traseu1.mp4')
+video_cap = capture.SocketCapture('192.168.88.21')
+# video_cap = capture.FileCapture('py_opencv\\traseu1.mp4')
 
 
 class IndexHandler(tornado.web.RequestHandler):
@@ -73,9 +74,13 @@ def checkQueue():
 def checkVideoCapture():
     if not video_cap.isOpened():
         video_cap.open()
-    
+
     frame = video_cap.readFrame()
+    if frame is None:
+        return
+
     data = frame_process.process_frame(frame)
+    print data["total_avg_angle"]
     b64 = capture.b64(data['frame'])
     # b64 = video_cap.b64()
     for c in clients:
@@ -83,12 +88,9 @@ def checkVideoCapture():
             'type': "camera",
             'data': b64
         })
+    input_queue.put("camera %s;" % data["total_avg_angle"])
 
 if __name__ == '__main__':
-    # start the serial worker in background (as a deamon)
-    # sp = serialworker.SerialProcess(input_queue, output_queue)
-    # sp.daemon = True
-    # print sp.start()
     tornado.options.parse_command_line()
     app = tornado.web.Application(
         handlers=[
@@ -106,6 +108,10 @@ if __name__ == '__main__':
     scheduler = tornado.ioloop.PeriodicCallback(checkQueue, 100, io_loop=mainLoop)
     camera_scheduler = tornado.ioloop.PeriodicCallback(checkVideoCapture, 10, io_loop=mainLoop)
 
+    sp = serialworker.SerialProcess(input_queue, output_queue, options.serial)
+    sp.daemon = True
+
+    sp.start()
     scheduler.start()
     camera_scheduler.start()
     mainLoop.start()
