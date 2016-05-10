@@ -1,5 +1,5 @@
 #include "busCommand.h"
- 
+#define busCommand_DEBUG true
 /**
  * Constructor makes sure some things are set.
  */
@@ -56,9 +56,9 @@ void busCommand::readBus() {
 	while (isAvailable() > 0) {
 		char inChar = busRead();   // Read single available character, there may be more waiting
 		if(inChar == '\r' || inChar == '\n') continue; //Skip CR and NEWLINE
-		#ifdef busCommand_DEBUG
+		//#ifdef busCommand_DEBUG
 			Serial.print(inChar);   // Echo back to serial stream
-		#endif
+		//#endif
 		if (inChar == transmissionEnd) {     // Check for the terminator (default ';')
 			readyToParse = true;
 		}

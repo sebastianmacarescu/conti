@@ -1,8 +1,9 @@
 #include <Servo.h>
 #include <SoftwareSerial.h>
+//#include <PID_v1.h>
 
 #include "busCommand.h"
-#include "DCMotor.h"
+#include "DirectionMotor.h"
 #include "Sonar.h"
 #include "ServoMotor.h"
 
@@ -16,17 +17,19 @@ String BlueSensorData = "sensors";
 /*---------VARIABLES-----------*/
 bool DEBUG = true;
 bool DEBUG_SENSOR_DATA = true;
+double Setpoint, Input, Output;
+
+//PID myPID(&Input, &Output, &Setpoint, 2, 5, 1, DIRECT);
 
 SoftwareSerial blueSerial(2, 3); // RX, TX
+
 
 int dLeft, dFront, dRight;
 boolean IsAutonomous = false;
 
 /*---------PINS-----------*/
-uint8_t steeringB = 7;
-uint8_t steeringA = 8;
-uint8_t steeringEn = 5;
-uint8_t tractionPin = 6;
+uint8_t steeringPin = 5; //
+uint8_t tractionPin = 6; //PWM Brushless
 
 uint8_t ECHO_LEFT = 13;
 uint8_t TRIGGER_LEFT = 12;
@@ -38,7 +41,7 @@ unsigned int DataSampleTime = 1000; //ms. SampleTime for other data
 unsigned int SerialDataTime = 1000; //ms. Time period for sending data to car
 
 busCommand bCmd;
-DCMotor* steeringMotor;
+DirectionMotor* steeringMotor;
 ServoMotor* tractionMotor;
 Sonar* mysonar;
 
@@ -59,42 +62,51 @@ void setupBlueSerial() {
 }
 
 void setup(){
-	setupBlueSerial();
+  //setupBlueSerial();
 	Serial.begin(9600);
-
+  
 	//Set commands
 	bCmd.addCommand("s", stopMotors);
 	bCmd.addCommand("steer", steer);
 	bCmd.addCommand("t", traction);
 	bCmd.addCommand("b", brake);
 	bCmd.addCommand("a", autoNom);
+  bCmd.addCommand("camera", camera);
 	bCmd.setDefaultHandler(unrecognized);
 	
 	//Comment this line to receive commands over standard serial
-	bCmd.setSoftwareSerial(&blueSerial);
+	//bCmd.setSoftwareSerial(&blueSerial);
 	
-	mysonar = new Sonar(oneSensorCycle);
-	mysonar->addSonar(TRIGGER_LEFT, ECHO_LEFT);
-	mysonar->addSonar(TRIGGER_RIGHT, ECHO_RIGHT);
-	mysonar->init();
+	//mysonar = new Sonar(oneSensorCycle);
+	//mysonar->addSonar(TRIGGER_LEFT, ECHO_LEFT);
+	//mysonar->addSonar(TRIGGER_RIGHT, ECHO_RIGHT);
+	//mysonar->init();
 
 	//Init other things
-	steeringMotor = new DCMotor(steeringEn, steeringA, steeringB);
+	steeringMotor = new DirectionMotor(steeringPin);
 	tractionMotor = new ServoMotor(tractionPin);
 
 	Serial.println("Setup complete");
-	blueSerial.println("Setup complete");
+	//blueSerial.println("Setup complete");
+
+  //Input = ..
+  //Setpoint = ..
+  //myPID.setMode(AUTOMATIC);
 }
 
 void loop(){
-
+  //Input = ..
+  //myPid.Compute();
+  //analogWrite(3, Output);
+  
+  //Serial.println("alive");
 	bCmd.readBus();
 	if(bCmd.isReadyToParse())
 		bCmd.Parse();
-	mysonar->checkSonar();
+	//mysonar->checkSonar();
 	//replace delay with static member millis
 	//oneSensorCycle();
-	steeringMotor->update();
+	//steeringMotor->update();
 	tractionMotor->update();
 	delay(100);
 	//updateSensorData();
@@ -115,6 +127,21 @@ void autoNom(){
 			tractionMotor->setSpeed(42);
 	}
 	IsAutonomous = !IsAutonomous;
+}
+
+void camera() {
+  char *arg;
+  int angle = 0;
+  if(!IsAutonomous)
+    autoNom();
+  arg = bCmd.getArg();
+  if(arg != NULL) angle = atoi(arg);
+
+  if(angle > 30) {
+    steer(255);
+  } else if(angle < -30) {
+    steer(-255);
+  }
 }
 
 void oneSensorCycle() { 
@@ -191,13 +218,13 @@ void sendSerialData(){
 
 
 void stopMotors(){
-	steeringMotor->setSpeed(0);
+	steeringMotor->setDirection(0);
 	tractionMotor->setSpeed(0);
 	debug(String(F("Motors stopped")), DEBUG);
 }
 
 void brake(){
-	steeringMotor->setSpeed(0);
+	steeringMotor->stop();
 }
 
 void steer(){
@@ -207,7 +234,7 @@ void steer(){
 	arg = bCmd.getArg();
 	if(arg != NULL) Speed = atoi(arg);
 
-	steeringMotor->setSpeed(Speed);   
+	steeringMotor->setDirection(Speed);   
 	
 	//delay(500);
 
@@ -216,7 +243,7 @@ void steer(){
 }
 
 void steer(int Speed){
-	steeringMotor->setSpeed(Speed);
+	steeringMotor->setDirection(Speed);
 }
 
 void traction(){
