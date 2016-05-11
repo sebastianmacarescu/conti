@@ -157,8 +157,10 @@
                                             
                                         </div>
                                         <div class="col-lg-4">
-                                            <select class="form-control">
-                                                <option>TEST</option>
+                                            <select class="form-control" id="selectCommandMode">
+                                                <option value="0">Test</option>
+                                                <option value="1">Manual</option>
+                                                <option value="2">Auto</option>
                                             </select>
                                         </div>
                                     </div>
@@ -166,11 +168,14 @@
                             </li>
                             <li>
                                 <div class="todo-content">
-                                    <div class="col-lg-4 col-lg-offset-2">
+                                    <div class="col-lg-4">
                                         <button class="btn btn-success form-control" id="startButton">START</button>
                                     </div>
                                     <div class="col-lg-4">
                                         <button class="btn btn-danger form-control" id="startButton">STOP</button>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <button class="btn btn-warning form-control" id="autoButton">AUTO</button>
                                     </div>
                                 </div>
                             </li>

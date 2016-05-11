@@ -1,5 +1,26 @@
 var GUI = function(){
   var parent = this;
+  this.mode = 0; //0 - TEST, 1 - MANUAL, 2 - AUTO
+  this.commands = {
+    _start: "init",
+    _stop: "stop",
+    _auto: "auto",
+    _traction: "t",
+    _steering: "steer"
+  };
+  this.commandFullStop = ';';
+  this.predefinedTestCommands = [
+    this.commands._start,
+    this.generateTractionCommand(50),
+    this.generateSteeringCommand(255),
+    this.generateTractionCommand(100),
+    this.generateSteeringCommand(-255),
+    this.generateTractionCommand(0),
+    this.generateSteeringCommand(0),
+    this.generateTractionCommand(100),
+    this.generateSteeringCommand(255),
+    this.commands._stop
+  ];
   this.pressedKeys = [];
   this.tractionValue = 50;
   this.tractionIncrementValue = 50;
@@ -24,7 +45,7 @@ var GUI = function(){
   this.socket.onclose = this.changeStatus(0);
   this.updateTimers();
   this.socket.onmessage = function(message) {
-    parent.processCommand(message);
+    parent.updateData(message);
   }; 
   
 }
@@ -56,7 +77,7 @@ GUI.prototype.changeStatus = function(status) {
     }
     
   };
-GUI.prototype.sendCommand = function(isReturn, returnCode) {
+GUI.prototype.sendControlCommand = function(isReturn, returnCode) {
     this.changeStatus(2);
     var message = "";
     var enableTraction = false;
@@ -114,14 +135,14 @@ GUI.prototype.sendCommand = function(isReturn, returnCode) {
 
     if(message.length)
       this.socket.send(message);
-    this.processCommand({data:message});
+    this.updateConsole(message);
     if(isReturn != true)
     {
       this.tractionValue = tractionValue;
       this.steeringValue = steeringValue;
     }
   };
-GUI.prototype.processCommand = function(message) {
+GUI.prototype.updateData = function(message) {
     var decoded_message;
     var type = "string";
     try{
@@ -133,11 +154,17 @@ GUI.prototype.processCommand = function(message) {
     if(type == "JSON") {
       this.changeStatus(2);
       if(decoded_message.type == "camera")
-        $(this.GUIElements.camera).attr('src', 'data:image/png;base64,' + decoded_message.data);
+        this.updateCamera(decoded_message.data);
     }
     else
-      $(this.GUIElements.debuggerConsole).append(message.data).append($('<br/>'));
+      this.updateConsole(message.data);
   };
+GUI.prototype.updateCamera = function(data) {
+  $(this.GUIElements.camera).attr('src', 'data:image/png;base64,' + data);
+};
+GUI.prototype.updateConsole = function(data) {
+  $(this.GUIElements.debuggerConsole).append(data).append($('<br/>'));
+};
 GUI.prototype.updateTimers = function() {
   var GUI = this;
   setInterval(function(){ 
@@ -161,38 +188,82 @@ GUI.prototype.secondsToTime = function(totalSec) {
 GUI.prototype.init = function() {
   var message = "init;";
   this.timers.timerSinceStarted += 1;
-  this.processCommand({data:message});
+  this.updateConsole(message);
   this.socket.send(message);
 };
 GUI.prototype.stop = function() {
   var message = "stop;";
-  this.processCommand({data:message});
+  this.updateConsole(message);
   this.socket.send(message);
+};
+GUI.prototype.toggleAuto = function() {
+  var message = "a";
+  this.updateConsole(message);
+  this.socket.send(message);
+};
+GUI.prototype.setCommandMode = function(mode) {
+  var previousMode = this.mode;
+  this.mode = mode;
+  switch(this.mode) {
+    case 0: _GUI.sendPredefinedTestCommands();
+    break;
+    case 1:
+      if(previousMode == 2)
+        _GUI.toggleAuto();
+    break;
+    case 2: _GUI.toggleAuto();
+    break;
+  }
+};
+GUI.prototype.sendPredefinedTestCommands = function() {
+  var parent = this;
+  for(command in this.predefinedTestCommands) {
+    setTimeout(function(){
+      var message = this.predefinedTestCommands[command] + this.commandFullStop;
+      parent.socket.send(message);
+    }, 500*command)
+  }
+};
+GUI.prototype.generateSteeringCommand = function(value) {
+  return this.commands.steering + value;
+};
+GUI.prototype.generateTractionCommand = function(value) {
+  return this.commands.traction + value;
 };
 
 $(document).ready(function(){
   var _GUI = new GUI();
 
   $(document).keydown(function(e){
-    if(_GUI.pressedKeys.indexOf(e.keyCode) == -1)
-    {
-      _GUI.pressedKeys.push(e.keyCode);
-      _GUI.sendCommand();
+    if(_GUI.mode == 1) {
+      if(_GUI.pressedKeys.indexOf(e.keyCode) == -1)
+      {
+        _GUI.pressedKeys.push(e.keyCode);
+        _GUI.sendControlCommand();
+      }
     }
   });
   $(document).keyup(function(e){
-    var index = _GUI.pressedKeys.indexOf(e.keyCode);
-    if(index != -1)
-    {
-      
-      _GUI.pressedKeys.splice(index, 1);
-      _GUI.sendCommand(true, e.keyCode);
+    if(_GUI.mode == 1) {
+      var index = _GUI.pressedKeys.indexOf(e.keyCode);
+      if(index != -1)
+      {
+        
+        _GUI.pressedKeys.splice(index, 1);
+        _GUI.sendControlCommand(true, e.keyCode);
+      }
     }
   });
   $(document).on('click','#startButton', function(){
     _GUI.init();
   }).on('click', '#stopButton', function(){
     _GUI.stop();
+  }).on('click', '#autoButton', function(){
+    _GUI.toggleAuto();
+  }).on('change', '#selectCommandMode', function(){
+    var commandMode = $(this).val();
+    _GUI.stop();
+    _GUI.setCommandMode(commandMode);
   });
   //$(_GUI.GUIElements.batteryLevel).text(Math.floor(Math.random()*(100-80+1)+80));
 });
