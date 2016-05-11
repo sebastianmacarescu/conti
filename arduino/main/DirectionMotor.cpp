@@ -13,9 +13,9 @@ void DirectionMotor::setDirection(int _Speed){
   int dir = map(_Speed, -255, 255, 10, 150);
   set_dir(dir);
 }
-/*void DirectionMotor::update(){
-  analogWrite(EN_PIN, abs(Speed));
-}*/
+void DirectionMotor::update(){
+  servo.write(this->dir);
+}
 
 void DirectionMotor::stop(){
   servo.detach();
@@ -30,5 +30,6 @@ void DirectionMotor::set_dir(int _dir){
     servo.write(pos);              // tell servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }*/
-  servo.write(_dir);
+  this->dir = _dir;
+  servo.write(this->dir);
 }

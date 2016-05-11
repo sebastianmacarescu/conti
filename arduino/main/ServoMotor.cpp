@@ -2,8 +2,8 @@
 
 int ServoMotor::PWM_STOP = 1450;
 int ServoMotor::PWM_INIT = 1450;
-int ServoMotor::PWM_F_MIN = 1500;
-int ServoMotor::PWM_F_MAX = 1540;
+int ServoMotor::PWM_F_MIN = 1540;
+int ServoMotor::PWM_F_MAX = 1560;
 int ServoMotor::PWM_B_MIN = 1350;
 int ServoMotor::PWM_B_MAX = 1300;
 

@@ -11,7 +11,7 @@ class DirectionMotor{public:
   DirectionMotor(int pin);
   //Speed [-255, 255]
   void setDirection(int _Speed);
-  //void update();
+  void update();
   void set_dir(int );
   void stop();
 };

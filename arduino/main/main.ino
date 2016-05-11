@@ -8,7 +8,7 @@
 #include "ServoMotor.h"
 
 
-/*---------DEFINES-----------*/
+/*---------DEFINES-----------*/ 
 
 
 /*---------BLUETOOTH RESPONSE COMMANDS-----------*/
@@ -62,7 +62,7 @@ void setupBlueSerial() {
 }
 
 void setup(){
-  //setupBlueSerial();
+  setupBlueSerial();
 	Serial.begin(9600);
   
 	//Set commands
@@ -75,7 +75,7 @@ void setup(){
 	bCmd.setDefaultHandler(unrecognized);
 	
 	//Comment this line to receive commands over standard serial
-	//bCmd.setSoftwareSerial(&blueSerial);
+	bCmd.setSoftwareSerial(&blueSerial);
 	
 	//mysonar = new Sonar(oneSensorCycle);
 	//mysonar->addSonar(TRIGGER_LEFT, ECHO_LEFT);
@@ -106,7 +106,7 @@ void loop(){
 	//mysonar->checkSonar();
 	//replace delay with static member millis
 	//oneSensorCycle();
-	//steeringMotor->update();
+	steeringMotor->update();
 	tractionMotor->update();
 	delay(100);
 	//updateSensorData();
@@ -132,8 +132,8 @@ void autoNom(){
 void camera() {
   char *arg;
   int angle = 0;
-  if(!IsAutonomous)
-    autoNom();
+  //if(!IsAutonomous)
+  //  autoNom();
   arg = bCmd.getArg();
   if(arg != NULL) angle = atoi(arg);
 
