@@ -1,4 +1,4 @@
-#include <Servo.h>
+#include <PWMServo.h>
 #include <SoftwareSerial.h>
 //#include <PID_v1.h>
 
@@ -28,8 +28,8 @@ int dLeft, dFront, dRight;
 boolean IsAutonomous = false;
 
 /*---------PINS-----------*/
-uint8_t steeringPin = 5; //
-uint8_t tractionPin = 6; //PWM Brushless
+uint8_t steeringPin = 10; //
+uint8_t tractionPin = 9; //PWM Brushless
 
 uint8_t ECHO_LEFT = 13;
 uint8_t TRIGGER_LEFT = 12;
@@ -41,9 +41,11 @@ unsigned int DataSampleTime = 1000; //ms. SampleTime for other data
 unsigned int SerialDataTime = 1000; //ms. Time period for sending data to car
 
 busCommand bCmd;
+Sonar* mysonar;
+
+
 DirectionMotor* steeringMotor;
 ServoMotor* tractionMotor;
-Sonar* mysonar;
 
 NewPing leftSonar(TRIGGER_LEFT, ECHO_LEFT, Sonar::MAX_DISTANCE);
 NewPing rightSonar(TRIGGER_RIGHT, ECHO_RIGHT, Sonar::MAX_DISTANCE);
@@ -106,9 +108,7 @@ void loop(){
 	//mysonar->checkSonar();
 	//replace delay with static member millis
 	//oneSensorCycle();
-	steeringMotor->update();
-	tractionMotor->update();
-	delay(100);
+	delay(10);
 	//updateSensorData();
 	//sendSerialData();
 	
@@ -224,7 +224,7 @@ void stopMotors(){
 }
 
 void brake(){
-	steeringMotor->stop();
+	//steeringMotor->stop();
 }
 
 void steer(){
@@ -234,11 +234,7 @@ void steer(){
 	arg = bCmd.getArg();
 	if(arg != NULL) Speed = atoi(arg);
 
-	steeringMotor->setDirection(Speed);   
-	
-	//delay(500);
-
-	//analogWrite(steeringPinE, abs(Speed));
+	steeringMotor->setDirection(Speed);   	
 	debug(String(F("Steering signal set to ")) + Speed, DEBUG); 
 }
 

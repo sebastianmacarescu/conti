@@ -2,7 +2,7 @@
 #define ServoMotor_h
 
 #include <Arduino.h>
-#include <Servo.h>
+#include <PWMServo.h>
 
 class ServoMotor{public:
 	static int PWM_INIT;
@@ -12,7 +12,7 @@ class ServoMotor{public:
 	static int PWM_B_MIN;
 	static int PWM_B_MAX;
 	
-	Servo servo;
+	PWMServo servo;
 	int PIN;
 	int dir = 1; // 0 Backward, 1 Forward
 	int PWM = PWM_INIT;

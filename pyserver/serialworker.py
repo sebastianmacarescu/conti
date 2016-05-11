@@ -17,12 +17,13 @@ class SerialProcess(multiprocessing.Process):
 
     def writeSerial(self, data):
         try:
-            self.sp.write(data)
-        except:
+            self.sp.write(data.encode())
+        except Exception as e:
+            print e
             print 'cannot connect'
-            while not self.is_connected():
-                pass
-            self.writeSerial(data)
+            # while not self.is_connected():
+            #     pass
+            # self.writeSerial(data)
         # time.sleep(1)
 
     def readSerial(self):
