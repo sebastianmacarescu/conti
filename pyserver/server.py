@@ -10,6 +10,7 @@ import serialworker
 import cameracapture
 import json
 
+from client_socket import ClientSocket, QueuePipe
 from py_opencv import capture
 from py_opencv import frame_process
 
@@ -31,6 +32,7 @@ output_queue = multiprocessing.Queue()
 
 video_cap = capture.SocketCapture('192.168.88.21')
 # video_cap = capture.FileCapture('py_opencv\\traseu1.mp4')
+comm_socket = ClientSocket('192.168.88.21', '8081')
 
 
 class IndexHandler(tornado.web.RequestHandler):
@@ -71,6 +73,19 @@ def checkQueue():
             c.write_message(message)
 
 
+def checkCommSocket():
+    if not comm_socket.isOpened():
+        comm_socket.open()
+
+    # comm_socket.write("relay_serial true;")
+    comm_socket.write("c_blue false;")
+    while True:
+        msg = comm_socket.read()
+        if not msg:
+            break
+        print "CommSocket " + msg
+
+
 def checkVideoCapture():
     if not video_cap.isOpened():
         video_cap.open()
@@ -107,11 +122,16 @@ if __name__ == '__main__':
     # adjust the scheduler_interval according to the frames sent by the serial port
     scheduler = tornado.ioloop.PeriodicCallback(checkQueue, 100, io_loop=mainLoop)
     camera_scheduler = tornado.ioloop.PeriodicCallback(checkVideoCapture, 10, io_loop=mainLoop)
+    comm_scheduler = tornado.ioloop.PeriodicCallback(checkCommSocket, 10, io_loop=mainLoop)
 
-    sp = serialworker.SerialProcess(input_queue, output_queue, options.serial)
-    sp.daemon = True
+    # sp = serialworker.SerialProcess(input_queue, output_queue, options.serial)
+    # sp.daemon = True
 
-    sp.start()
+    comm_socket.daemon = True
+
+    # sp.start()
+    comm_socket.start()
     scheduler.start()
     camera_scheduler.start()
+    comm_scheduler.start()
     mainLoop.start()
