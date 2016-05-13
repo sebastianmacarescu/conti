@@ -3,14 +3,18 @@
 DirectionMotor::DirectionMotor(int pin){
   PIN = pin;
   servo.attach(PIN);
-  dir = 90;
+  this->dir = MIDDLE_ANGLE;
+  servo.write(this->dir);
 }
 
 //Speed [-255, 255]
 void DirectionMotor::setDirection(int _Speed){
-  int _dir = map(_Speed, -255, 255, 20, 160);
-  this->dir = _dir;
-  servo.write(_dir);
+  if(_Speed == 0) {
+    this->dir = MIDDLE_ANGLE;
+  } else {
+    this->dir = map(_Speed, -255, 255, 63, 107);
+  }
+  servo.write(this->dir);
 }
 void DirectionMotor::update(){
 }

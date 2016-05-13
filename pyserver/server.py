@@ -26,6 +26,8 @@ CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 STATIC_ROOT = os.path.join(CURRENT_DIR, 'static')
 
 clients = []
+measurments = []
+maxElements = 4
 
 input_queue = multiprocessing.Queue()
 output_queue = multiprocessing.Queue()
@@ -72,13 +74,12 @@ def checkQueue():
         for c in clients:
             c.write_message(message)
 
-
 def checkCommSocket():
     if not comm_socket.isOpened():
         comm_socket.open()
 
     # comm_socket.write("relay_serial true;")
-    comm_socket.write("c_blue false;")
+    #comm_socket.write("c_blue false;")
     while True:
         msg = comm_socket.read()
         if not msg:
@@ -87,6 +88,7 @@ def checkCommSocket():
 
 
 def checkVideoCapture():
+    global measurments
     if not video_cap.isOpened():
         video_cap.open()
 
@@ -95,7 +97,12 @@ def checkVideoCapture():
         return
 
     data = frame_process.process_frame(frame)
-    print data["total_avg_angle"]
+    measurments.append(int(data["total_avg_angle"]))
+    if len(measurments) == maxElements:
+        measurments.sort()
+        print measurments[maxElements/2]
+        input_queue.put("camera %s;" % measurments[maxElements/2])
+        measurments = []
     b64 = capture.b64(data['frame'])
     # b64 = video_cap.b64()
     for c in clients:
@@ -103,7 +110,7 @@ def checkVideoCapture():
             'type': "camera",
             'data': b64
         })
-    input_queue.put("camera %s;" % data["total_avg_angle"])
+    #input_queue.put("camera %s;" % int(data["total_avg_angle"]))
 
 if __name__ == '__main__':
     tornado.options.parse_command_line()
@@ -124,12 +131,12 @@ if __name__ == '__main__':
     camera_scheduler = tornado.ioloop.PeriodicCallback(checkVideoCapture, 10, io_loop=mainLoop)
     comm_scheduler = tornado.ioloop.PeriodicCallback(checkCommSocket, 10, io_loop=mainLoop)
 
-    # sp = serialworker.SerialProcess(input_queue, output_queue, options.serial)
-    # sp.daemon = True
+    sp = serialworker.SerialProcess(input_queue, output_queue, options.serial)
+    sp.daemon = True
 
     comm_socket.daemon = True
 
-    # sp.start()
+    sp.start()
     comm_socket.start()
     scheduler.start()
     camera_scheduler.start()

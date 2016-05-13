@@ -9,7 +9,7 @@ class Sonar{public:
 	static const int MAX_DISTANCE = 300;
 	static const int PING_INTERVAL = 50;
 	static const int FILTER_SIZE = 11;
-  static const int BASIC_MAX_DISTANCE = 50;
+	static const int BASIC_MAX_DISTANCE = 50;
 	static Sonar* singleton;
 	
 	int SONAR_NUM = 0;
@@ -23,10 +23,10 @@ class Sonar{public:
 
 	NewPing sonar[MAX_SONAR_NUM];
 
-	void (*callback)(void);
+	void (*callback)(unsigned int*);
 
 	Sonar();
-	Sonar(void (*cycle)(void));
+	Sonar(void (*cycle)(unsigned int*));
 
 	void addSonar(int trigger, int echo);
 	void init();
@@ -37,7 +37,7 @@ private:
 	static void echoCheck();
 	void oneSensorCycle();
 	void updateFilter();
-	void ReplaceMeasurements();
+	void sortMeasurments();
 	void MedianFilter();
   void IQRMedianFilter();
   void BasicFilter();

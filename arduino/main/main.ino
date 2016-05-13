@@ -17,25 +17,30 @@ String BlueSensorData = "sensors";
 /*---------VARIABLES-----------*/
 bool DEBUG = true;
 bool DEBUG_SENSOR_DATA = true;
-double Setpoint, Input, Output;
 
-//PID myPID(&Input, &Output, &Setpoint, 2, 5, 1, DIRECT);
+int isCameraRunning = false;
+int cameraValue = 0;
+//int SetpointDirection, InputDirection, OutputDirection;
+//int SetpointThrottle, InputThrottle, OutputThrottle;
+
+//PID DirectionPID(&InputDirection, &OutputDirection, &SetpointDirection, 2, 5, 1, DIRECT);
+//PID ThrottlePID(&InputThrottle, &OutputThrottle, &SetpointThrottle, 2, 5, 1, DIRECT);
 
 SoftwareSerial blueSerial(2, 3); // RX, TX
 
 
-int dLeft, dFront, dRight;
+//int dLeft, dFront, dRight;
 boolean IsAutonomous = false;
 
 /*---------PINS-----------*/
 uint8_t steeringPin = 10; //
 uint8_t tractionPin = 9; //PWM Brushless
 
-uint8_t ECHO_LEFT = 13;
-uint8_t TRIGGER_LEFT = 12;
+uint8_t ECHO_LEFT = 6;
+uint8_t TRIGGER_LEFT = 7;
 
 uint8_t ECHO_RIGHT = 11;
-uint8_t TRIGGER_RIGHT = 10;
+uint8_t TRIGGER_RIGHT = 12;
 
 unsigned int DataSampleTime = 1000; //ms. SampleTime for other data
 unsigned int SerialDataTime = 1000; //ms. Time period for sending data to car
@@ -47,10 +52,10 @@ Sonar* mysonar;
 DirectionMotor* steeringMotor;
 ServoMotor* tractionMotor;
 
-NewPing leftSonar(TRIGGER_LEFT, ECHO_LEFT, Sonar::MAX_DISTANCE);
-NewPing rightSonar(TRIGGER_RIGHT, ECHO_RIGHT, Sonar::MAX_DISTANCE);
+//NewPing leftSonar(TRIGGER_LEFT, ECHO_LEFT, Sonar::MAX_DISTANCE);
+//NewPing rightSonar(TRIGGER_RIGHT, ECHO_RIGHT, Sonar::MAX_DISTANCE);
 
-void oneSensorCycle();
+void oneSensorCycle(unsigned int cm[]);
 
 void setupBlueSerial() {
 	blueSerial.begin(115200);  // The Bluetooth Mate defaults to 115200bps
@@ -78,22 +83,22 @@ void setup(){
 	
 	//Comment this line to receive commands over standard serial
 	bCmd.setSoftwareSerial(&blueSerial);
-	
-	//mysonar = new Sonar(oneSensorCycle);
-	//mysonar->addSonar(TRIGGER_LEFT, ECHO_LEFT);
-	//mysonar->addSonar(TRIGGER_RIGHT, ECHO_RIGHT);
-	//mysonar->init();
-
+	//Setup sensors
+	mysonar = new Sonar(oneSensorCycle);
+	mysonar->addSonar(TRIGGER_LEFT, ECHO_LEFT);
+	mysonar->addSonar(TRIGGER_RIGHT, ECHO_RIGHT);
+	mysonar->init();
+	//setup PID
+	// InputDirection = 0;
+	// SetpointDirection = 50;
+	// DirectionPID.SetMode(AUTOMATIC);
+	// DirectionPID.SetOutputLimits(-255, 255);
 	//Init other things
 	steeringMotor = new DirectionMotor(steeringPin);
 	tractionMotor = new ServoMotor(tractionPin);
 
 	Serial.println("Setup complete");
 	//blueSerial.println("Setup complete");
-
-  //Input = ..
-  //Setpoint = ..
-  //myPID.setMode(AUTOMATIC);
 }
 
 void loop(){
@@ -105,7 +110,10 @@ void loop(){
 	bCmd.readBus();
 	if(bCmd.isReadyToParse())
 		bCmd.Parse();
-	//mysonar->checkSonar();
+	if(IsAutonomous) {
+		mysonar->checkSonar();
+	}
+	//Serial.println(mysonar->cm[0]);
 	//replace delay with static member millis
 	//oneSensorCycle();
 	delay(10);
@@ -116,39 +124,54 @@ void loop(){
 	//Serial.print("freeMemory()=");
 	//Serial.println(freeMemory());
 	//
+	isCameraRunning = false;
 }
 
 void autoNom(){
 	if(IsAutonomous) {
 		//Stop motors
 		stopMotors();
+		//tractionMotor->setSpeed(42);
 	}
 	else {
-			tractionMotor->setSpeed(42);
+		tractionMotor->setSpeed(42);
 	}
 	IsAutonomous = !IsAutonomous;
+	debug(String(F("Autonomous toggled")), DEBUG);
 }
 
 void camera() {
   char *arg;
   int angle = 0;
-  //if(!IsAutonomous)
-  //  autoNom();
   arg = bCmd.getArg();
-  if(arg != NULL) angle = atoi(arg);
-
-  if(angle > 30) {
-    steer(255);
-  } else if(angle < -30) {
-    steer(-255);
-  }
+	if(arg != NULL) angle = atoi(arg);
+  
+  if(IsAutonomous) {
+  	cameraValue = map(angle, -90, 90, -255, 255);
+  	isCameraRunning = true;
+	  // if(angle > 5) {
+	  //   steer(-255);
+	  // } else if(angle < -5) {
+	  //   steer(255);
+	  // } else {
+	  // 	steer(0);
+	  // }
+	}
 }
 
-void oneSensorCycle() { 
+void oneSensorCycle(unsigned int cm[]) { 
+	//blueSerial.print(cm[0]);
+	//blueSerial.print(" ");
+	//blueSerial.println(cm[1]);
+
+	int dLeft, dRight, dFront;
+	int steerValue = 0;
 	if(!IsAutonomous) return;
+
 	// Sensor ping cycle complete, do something with the results.
-	dLeft = leftSonar.ping_median() / US_ROUNDTRIP_CM;
-	dRight = rightSonar.ping_median() / US_ROUNDTRIP_CM;
+	dLeft = cm[0]; //index depends on sensor addition order in setup
+	dRight = cm[1]; 
+	// dFront = cm[2];
 	// Serial.print("; LF "); Serial.print(cm[0]);
 	// Serial.print("; F "); Serial.print(cm[1]);
 	// Serial.print("; RF "); Serial.print(cm[2]);
@@ -156,21 +179,34 @@ void oneSensorCycle() {
 	
 	// Speed = 120, dLeft = cm[0], dFront = cm[1], dRight = cm[2];
 	// if(dFront == 0) dFront = MAX_DISTANCE;
-	if(dLeft == 0) dLeft = 39;
-	if(dRight == 0) dRight = 39;
+	// if(dLeft == 0) dLeft = 39;
+	// if(dRight == 0) dRight = 39;
 
-	if(dLeft < 40)
-	steer(-250);
-	else if(dRight < 40)
-	steer(250);
-	else
-	steer(0);
+	// if(dLeft < 50 || dRight < 50) {
+	// 	InputDirection = dLeft < dRight ? dLeft : dRight;
+	// 	DirectionPID.Compute();
+	// 	Output = dLeft < dRight ? Output : Output * (-1);
+	// 	steer(Output);
+	// } else {
+	// 	steer(0);
+	// }
+	if(dLeft < 50 || dRight < 50) {
+		int sensorsValue = dLeft - dRight;
+		sensorsValue = map(sensorsValue, -50, 50, -255, 255);
+		steerValue = sensorsValue;
+		if(isCameraRunning) {
+			steerValue = cameraValue * 0.4 + sensorsValue * 0.6;
+		}
+		steer(steerValue); 
+	} else {
+		steer(steerValue);
+	}
 	
 	Serial.print("Done ");
 	Serial.print(dLeft); Serial.print(" ");
 	Serial.print(dRight); Serial.print(" ");
+	Serial.print(steerValue); Serial.print(" ");
 	Serial.println("");
-
 	
 	//todo: algorithm here  
 	

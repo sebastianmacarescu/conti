@@ -12,7 +12,7 @@
 #define busCommand_MAXCOMMANDLENGTH 8
  
 // Uncomment the next line to run the library in debug mode (verbose messages)
-//#define busCommand_DEBUG
+#define busCommand_DEBUG
  
  
 class busCommand {
