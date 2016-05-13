@@ -130,6 +130,6 @@ def process_frame(frame):
         cv2.line(frame, (px1, py1), (px2, py2), (0, 0, 255), 10)
 
     return {
-        'frame': gray,
+        'frame': frame,
         'total_avg_angle': total_avg_angle
     }

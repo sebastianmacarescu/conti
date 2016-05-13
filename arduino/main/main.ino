@@ -124,7 +124,7 @@ void loop(){
 	//Serial.print("freeMemory()=");
 	//Serial.println(freeMemory());
 	//
-	isCameraRunning = false;
+	//isCameraRunning = false;
 }
 
 void autoNom(){
@@ -147,7 +147,7 @@ void camera() {
 	if(arg != NULL) angle = atoi(arg);
   
   if(IsAutonomous) {
-  	cameraValue = map(angle, -90, 90, -255, 255);
+  	cameraValue = map(angle, -40, 40, 255, -255);
   	isCameraRunning = true;
 	  // if(angle > 5) {
 	  //   steer(-255);
@@ -190,23 +190,29 @@ void oneSensorCycle(unsigned int cm[]) {
 	// } else {
 	// 	steer(0);
 	// }
-	if(dLeft < 50 || dRight < 50) {
+	if(dLeft < 80 || dRight < 80) {
 		int sensorsValue = dLeft - dRight;
-		sensorsValue = map(sensorsValue, -50, 50, -255, 255);
+		sensorsValue = map(sensorsValue, -80, 80, -255, 255);
 		steerValue = sensorsValue;
 		if(isCameraRunning) {
-			steerValue = cameraValue * 0.4 + sensorsValue * 0.6;
+			Serial.println(isCameraRunning);
+			steerValue = cameraValue * 0.6 + sensorsValue * 0.4;
 		}
+		// if(steerValue > 10)
+		// 	steerValue = 255;
+		// else if(steerValue < -10)
+		// 	steerValue = -255;
 		steer(steerValue); 
-	} else {
+	} 
+	else {
 		steer(steerValue);
 	}
 	
 	Serial.print("Done ");
-	Serial.print(dLeft); Serial.print(" ");
-	Serial.print(dRight); Serial.print(" ");
-	Serial.print(steerValue); Serial.print(" ");
-	Serial.println("");
+	//blueSerial.print(dLeft); Serial.print(" ");
+	//blueSerial.print(dRight); Serial.print(" ");
+	//blueSerial.println(steerValue);// Serial.println(" ");
+	//blueSerial.println("");
 	
 	//todo: algorithm here  
 	

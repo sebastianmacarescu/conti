@@ -1,5 +1,5 @@
 #include "busCommand.h"
-#define busCommand_DEBUG true
+//#define busCommand_DEBUG true
 /**
  * Constructor makes sure some things are set.
  */

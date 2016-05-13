@@ -27,7 +27,7 @@ STATIC_ROOT = os.path.join(CURRENT_DIR, 'static')
 
 clients = []
 measurments = []
-maxElements = 4
+maxElements = 10
 
 input_queue = multiprocessing.Queue()
 output_queue = multiprocessing.Queue()

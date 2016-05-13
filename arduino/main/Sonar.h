@@ -9,7 +9,7 @@ class Sonar{public:
 	static const int MAX_DISTANCE = 300;
 	static const int PING_INTERVAL = 50;
 	static const int FILTER_SIZE = 11;
-	static const int BASIC_MAX_DISTANCE = 50;
+	static const int BASIC_MAX_DISTANCE = 80;
 	static Sonar* singleton;
 	
 	int SONAR_NUM = 0;
