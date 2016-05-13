@@ -16,6 +16,7 @@ class ServoMotor{public:
 	int PIN;
 	int dir = 1; // 0 Backward, 1 Forward
 	int PWM = PWM_INIT;
+	int raw_value;
 
 	ServoMotor(int pin);
 	//Speed [-255, 255]

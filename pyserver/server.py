@@ -30,9 +30,12 @@ clients = []
 input_queue = multiprocessing.Queue()
 output_queue = multiprocessing.Queue()
 
-video_cap = capture.SocketCapture('192.168.88.21')
+# IP_ADDR = '192.168.88.21'
+IP_ADDR = '192.168.1.10'
+
+video_cap = capture.SocketCapture(IP_ADDR)
 # video_cap = capture.FileCapture('py_opencv\\traseu1.mp4')
-comm_socket = ClientSocket('192.168.88.21', '8081')
+comm_socket = ClientSocket(IP_ADDR, '8081')
 
 
 class IndexHandler(tornado.web.RequestHandler):
@@ -78,7 +81,7 @@ def checkCommSocket():
         comm_socket.open()
 
     # comm_socket.write("relay_serial true;")
-    comm_socket.write("c_blue false;")
+    # comm_socket.write("c_blue false;")
     while True:
         msg = comm_socket.read()
         if not msg:
@@ -95,7 +98,7 @@ def checkVideoCapture():
         return
 
     data = frame_process.process_frame(frame)
-    print data["total_avg_angle"]
+    # print data["total_avg_angle"]
     b64 = capture.b64(data['frame'])
     # b64 = video_cap.b64()
     for c in clients:
@@ -104,6 +107,7 @@ def checkVideoCapture():
             'data': b64
         })
     input_queue.put("camera %s;" % data["total_avg_angle"])
+    comm_socket.write("camera %s;" % data["total_avg_angle"]);
 
 if __name__ == '__main__':
     tornado.options.parse_command_line()

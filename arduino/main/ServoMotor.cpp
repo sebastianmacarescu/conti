@@ -15,10 +15,12 @@ int ServoMotor::PWM_B_MAX = 1300;
 ServoMotor::ServoMotor(int pin){
 	PIN = pin;
 	servo.attach(PIN);
+	raw_value = 0;
 }
 
 //Speed [-255, 255]
 void ServoMotor::setSpeed(int _Speed){
+	raw_value = _Speed;
 	if(_Speed == 0)
 		PWM = ANGLE_STOP;
 	else 
@@ -40,6 +42,7 @@ void ServoMotor::update(){
 void ServoMotor::stop(){
 	servo.write(ANGLE_STOP);
 	PWM = ANGLE_STOP;
+	raw_value = 0;
 }
 
 

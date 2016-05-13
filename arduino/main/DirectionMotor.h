@@ -7,6 +7,7 @@ class DirectionMotor{public:
   int PIN;
   PWMServo servo;
   int dir;
+  int raw_value;
 
   DirectionMotor(int pin);
   //Speed [-255, 255]

@@ -25,6 +25,8 @@ SoftwareSerial blueSerial(2, 3); // RX, TX
 
 
 int dLeft, dFront, dRight;
+int angle_camera;
+
 boolean IsAutonomous = false;
 
 /*---------PINS-----------*/
@@ -38,7 +40,7 @@ uint8_t ECHO_RIGHT = 11;
 uint8_t TRIGGER_RIGHT = 10;
 
 unsigned int DataSampleTime = 1000; //ms. SampleTime for other data
-unsigned int SerialDataTime = 1000; //ms. Time period for sending data to car
+unsigned int SerialDataTime = 300; //ms. Time period for sending data to car
 
 busCommand bCmd;
 Sonar* mysonar;
@@ -110,7 +112,7 @@ void loop(){
 	//oneSensorCycle();
 	delay(10);
 	//updateSensorData();
-	//sendSerialData();
+	sendSerialData();
 	
 	//Code for memory
 	//Serial.print("freeMemory()=");
@@ -136,7 +138,7 @@ void camera() {
   //  autoNom();
   arg = bCmd.getArg();
   if(arg != NULL) angle = atoi(arg);
-
+  angle_camera = angle;
   if(angle > 30) {
     steer(255);
   } else if(angle < -30) {
@@ -208,8 +210,16 @@ void sendSerialData(){
 		//toSend += String(" ") + steeringPos;
 		//toSend += String(" ") + distance;
 
-		//blueSerial.println(toSend);
-		debug(String("Data to send ") + toSend, DEBUG_SENSOR_DATA);
+		// dLeft dRight camera traction steer
+		toSend += String(" ") + dLeft;
+		toSend += String(" ") + dRight;
+		toSend += String(" ") + angle_camera;
+		toSend += String(" ") + tractionMotor->raw_value;
+		toSend += String(" ") + steeringMotor->raw_value;
+
+		toSend += ";";
+		blueSerial.println(toSend);
+		//debug(String("Data to send ") + toSend, DEBUG_SENSOR_DATA);
 		lastSendTime = now;
 	}
 }
