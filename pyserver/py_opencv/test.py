@@ -44,8 +44,8 @@ def half(a, b):
 paused = False
 font = cv2.FONT_HERSHEY_SIMPLEX
 
-cap = capture.FileCapture('hol.mp4')
-# cap = capture.FileCapture('traseu1.mp4')
+# cap = capture.FileCapture('hol.mp4')
+cap = capture.FileCapture('traseu1.mp4')
 # cap = capture.SocketCapture('192.168.88.21')
 # cap = capture.SocketCapture('192.168.1.2')
 cap.open()
@@ -140,7 +140,7 @@ while(cap.isOpened()):
             # px2 = (int)(px1 + length * np.sin(avg_angle * np.pi / 180))
             # py2 = (int)(py1 + length * np.cos(avg_angle * np.pi / 180))
 
-            cv2.line(frame, (px1, py1), (px2, py2), (0, 255, 0), 5)
+            # cv2.line(frame, (px1, py1), (px2, py2), (0, 255, 0), 5)
         
         total_avg_angle = total_avg_sum / ( rows * (rows + 2) / 2 )
         print total_avg_angle

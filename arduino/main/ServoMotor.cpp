@@ -23,8 +23,13 @@ void ServoMotor::setSpeed(int _Speed){
 	raw_value = _Speed;
 	if(_Speed == 0)
 		PWM = ANGLE_STOP;
-	else 
+	else if(_Speed == 50) 
 		PWM = ANGLE_MIN_A;
+	else if(_Speed == 100) 
+		PWM = ANGLE_MIN_A + 1;
+	else if(_Speed == 150) 
+		PWM = ANGLE_MIN_A + 2;
+	
 	servo.write(PWM);
 	return;
 	//_Speed = limitTractionSpeed(_Speed);

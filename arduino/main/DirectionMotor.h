@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <PWMServo.h>
 class DirectionMotor{public:
+  static const int MIDDLE_ANGLE = 83;
   int PIN;
   PWMServo servo;
   int dir;

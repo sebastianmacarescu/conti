@@ -1,0 +1,209 @@
+
+
+sensors 80 80 21 0 0;
+
+sensors 80 80 21 0 0;
+
+sensors 80 80 21 0 0;
+
+sensors 80 80 21 0 0;
+
+sensors 80 80 10 0 0;
+
+sensors 80 80 10 0 0;
+
+sensors 80 80 10 0 0;
+
+sensors 80 80 9 0 0;
+
+sensors 80 80 9 0 0;
+
+sensors 80 80 9 0 0;
+
+sensors 80 80 4 0 0;
+
+sensors 80 80 4 0 0;
+
+sensors 80 80 4 0 0;
+
+sensors 80 80 4 0 100;
+
+sensors 80 80 -15 0 100;
+
+sensors 80 80 -15 0 0;
+
+sensors 80 80 -15 0 -255;
+
+sensors 80 80 -10 0 -255;
+
+sensors 80 80 -10 0 0;
+
+sensors 80 80 -10 0 0;
+
+sensors 80 80 -10 0 150;
+
+sensors 80 80 -6 0 150;
+
+sensors 80 80 -6 0 150;
+
+sensors 80 80 -6 0 150;
+
+sensors 80 80 -6 0 150;
+
+sensors 80 80 0 0 150;
+
+sensors 80 80 0 0 150;
+
+sensors 80 80 0 0 150;
+
+sensors 80 80 -12 0 150;
+
+sensors 80 80 -12 0 150;
+
+sensors 80 80 -12 0 150;
+
+sensors 80 80 -12 0 150;
+
+sensors 80 80 -4 0 150;
+
+sensors 80 80 -4 0 0;
+
+sensors 80 80 -4 0 0;
+
+sensors 80 80 -5 0 0;
+
+sensors 80 80 -5 0 0;
+
+sensors 80 80 -5 0 0;
+
+sensors 80 80 -5 50 0;
+
+sensors 80 80 -5 50 0;
+
+sensors 80 80 -5 50 0;
+
+sensors 80 80 -5 50 -255;
+
+sensors 80 80 -18 50 -255;
+
+sensors 80 80 -18 50 -255;
+
+sensors 80 80 -18 50 -255;
+
+sensors 80 80 -15 50 -255;
+
+sensors 80 80 -15 50 0;
+
+sensors 80 80 -15 50 0;
+
+sensors 80 80 -15 50 0;
+
+sensors 80 52 -37 50 0;
+
+sensors 80 40 -37 50 0;
+
+sensors 80 49 -37 50 255;
+
+sensors 80 57 -24 50 255;
+
+sensors 80 80 -24 50 255;
+
+sensors 80 80 -24 50 0;
+
+sensors 80 67 -24 50 0;
+
+sensors 80 59 -13 50 0;
+
+sensors 80 53 -13 50 0;
+
+sensors 80 80 -13 50 255;
+
+sensors 80 80 3 50 255;
+
+sensors 80 63 3 50 255;
+
+sensors 80 80 3 50 255;
+
+sensors 80 41 3 50 255;
+
+sensors 80 37 9 50 255;
+
+sensors 80 57 9 50 255;
+
+sensors 80 54 9 50 0;
+
+sensors 80 80 -14 50 0;
+
+sensors 80 80 -14 50 0;
+
+sensors 80 80 -14 50 255;
+
+sensors 80 80 -14 50 255;
+
+sensors 80 80 -18 50 255;
+
+sensors 80 80 -18 50 255;
+
+sensors 80 80 -18 50 255;
+
+sensors 80 80 -18 50 255;
+
+sensors 79 80 1 50 255;
+
+sensors 71 80 1 50 255;
+
+sensors 67 80 1 50 255;
+
+sensors 62 80 8 50 255;
+
+sensors 56 80 8 50 255;
+
+sensors 51 80 8 50 255;
+
+sensors 45 80 8 50 255;
+
+sensors 40 80 1 50 255;
+
+sensors 34 80 1 50 -255;
+
+sensors 28 80 1 50 -255;
+
+sensors 22 80 12 50 -255;
+
+sensors 20 80 12 50 -255;
+
+sensors 62 80 12 50 -255;
+
+sensors 57 80 12 50 -255;
+
+sensors 52 80 23 50 -255;
+
+sensors 48 80 23 50 -255;
+
+sensors 45 80 23 50 -255;
+
+sensors 36 80 -6 50 -255;
+
+sensors 60 80 -6 50 -255;
+
+sensors 53 80 -6 50 -255;
+
+sensors 50 80 -6 50 -255;
+
+sensors 42 80 -1 0 -255;
+
+sensors 39 80 -1 0 -255;
+
+sensors 39 80 -1 0 -255;
+
+sensors 39 80 -8 0 -255;
+
+sensors 39 80 -8 0 -255;
+
+sensors 39 80 -8 0 -255;
+
+sensors 39 80 -8 0 -255;
+
+sensors 39 80 -20 0 -255;
+
+sensors 39 80 -20 0 -255;

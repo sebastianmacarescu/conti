@@ -26,6 +26,10 @@ CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 STATIC_ROOT = os.path.join(CURRENT_DIR, 'static')
 
 clients = []
+measurments = []
+maxElements = 6
+
+RELAY_COMM = True
 
 input_queue = multiprocessing.Queue()
 output_queue = multiprocessing.Queue()
@@ -62,6 +66,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         # self.write_message('ack')
         input_queue.put(message)
 
+        if RELAY_COMM:
+            comm_socket.write(message)
+
     def on_close(self):
         print 'connection closed'
         clients.remove(self)
@@ -87,9 +94,13 @@ def checkCommSocket():
         if not msg:
             break
         print "CommSocket " + msg
+        msg = msg.rstrip()
+        with open("data.txt", "a") as myfile:
+            myfile.write(msg)
 
 
 def checkVideoCapture():
+    global measurments
     if not video_cap.isOpened():
         video_cap.open()
 
@@ -99,15 +110,21 @@ def checkVideoCapture():
 
     data = frame_process.process_frame(frame)
     # print data["total_avg_angle"]
+    measurments.append(int(data["total_avg_angle"]))
+    if len(measurments) == maxElements:
+        measurments.sort()
+        # print measurments[maxElements/2]
+        comm_socket.write("camera %s;" % measurments[maxElements/2])
+        input_queue.put("camera %s;" % measurments[maxElements/2])
+        measurments = []
+
     b64 = capture.b64(data['frame'])
     # b64 = video_cap.b64()
     for c in clients:
         c.write_message({
             'type': "camera",
             'data': b64
-        })
-    input_queue.put("camera %s;" % data["total_avg_angle"])
-    comm_socket.write("camera %s;" % data["total_avg_angle"]);
+        })    
 
 if __name__ == '__main__':
     tornado.options.parse_command_line()

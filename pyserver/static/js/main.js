@@ -3,22 +3,26 @@ var GUI = function(){
   this.mode = 0; //0 - TEST, 1 - MANUAL, 2 - AUTO
   this.commands = {
     _start: "init",
-    _stop: "stop",
+    _stop: "s",
     _auto: "auto",
     _traction: "t",
-    _steering: "steer"
+    _steering: "steer",
+    _relay: "relay_serial"
   };
+  this.relayState = false;
   this.commandFullStop = ';';
   this.predefinedTestCommands = [
     this.commands._start,
-    this.generateTractionCommand(50),
-    this.generateSteeringCommand(255),
-    this.generateTractionCommand(100),
-    this.generateSteeringCommand(-255),
-    this.generateTractionCommand(0),
+    //this.generateTractionCommand(50),
+    this.generateSteeringCommand(100),
+    //this.generateTractionCommand(100),
     this.generateSteeringCommand(0),
-    this.generateTractionCommand(100),
-    this.generateSteeringCommand(255),
+    //this.generateTractionCommand(0),
+    this.generateSteeringCommand(-255),
+    //this.generateTractionCommand(100),
+    this.generateSteeringCommand(0),
+    //this.generateTractionCommand(50),
+    this.generateSteeringCommand(150),
     this.commands._stop
   ];
   this.pressedKeys = [];
@@ -47,7 +51,7 @@ var GUI = function(){
   this.socket.onmessage = function(message) {
     parent.updateData(message);
   }; 
-  
+  this.setCommandMode(0);
 }
 GUI.prototype.changeStatus = function(status) {
     switch(status)
@@ -87,7 +91,7 @@ GUI.prototype.sendControlCommand = function(isReturn, returnCode) {
     var tractionValue = isReturn ? 0 : this.tractionValue;
     var tractionIncrementValue = this.tractionIncrementValue;
     var steeringValue = isReturn ? 0 : this.steeringValue;
-
+    //console.log(this.pressedKeys);
     if(isReturn == true)
     {
       if(returnCode == 87 || returnCode == 83)
@@ -109,9 +113,9 @@ GUI.prototype.sendControlCommand = function(isReturn, returnCode) {
           tractionSign = "-";
         if(item == 65)
           steeringSign = "-";
-        if(item == 16)
-          tractionValue = (tractionValue + tractionIncrementValue > 255) ? 255 : tractionValue + tractionIncrementValue;
-        if(item == 17)
+        if(item == 221)
+          tractionValue = (tractionValue + tractionIncrementValue > 250) ? 250 : tractionValue + tractionIncrementValue;
+        if(item == 219)
           tractionValue = (tractionValue - tractionIncrementValue < 50) ? 50 : tractionValue - tractionIncrementValue;  
       }
     }
@@ -132,7 +136,7 @@ GUI.prototype.sendControlCommand = function(isReturn, returnCode) {
       }
       message += ";";
     }
-
+    console.log(message);
     if(message.length)
       this.socket.send(message);
     this.updateConsole(message);
@@ -192,59 +196,78 @@ GUI.prototype.init = function() {
   this.socket.send(message);
 };
 GUI.prototype.stop = function() {
-  var message = "stop;";
+  var message = "s;";
   this.updateConsole(message);
   this.socket.send(message);
 };
 GUI.prototype.toggleAuto = function() {
-  var message = "a";
+  var message = "a;";
   this.updateConsole(message);
   this.socket.send(message);
 };
 GUI.prototype.setCommandMode = function(mode) {
   var previousMode = this.mode;
-  this.mode = mode;
+  var parent = this;
+  this.mode = parseInt(mode);
+  this.pressedKeys = [];
+  console.log(this.mode);
   switch(this.mode) {
-    case 0: _GUI.sendPredefinedTestCommands();
+    case 0: this.sendPredefinedTestCommands();
     break;
     case 1:
       if(previousMode == 2)
-        _GUI.toggleAuto();
+        this.toggleAuto();
     break;
-    case 2: _GUI.toggleAuto();
+    case 2: 
+      this.toggleAuto();
     break;
   }
 };
 GUI.prototype.sendPredefinedTestCommands = function() {
   var parent = this;
-  for(command in this.predefinedTestCommands) {
-    setTimeout(function(){
-      var message = this.predefinedTestCommands[command] + this.commandFullStop;
+  var commandsNumber = this.predefinedTestCommands.length;
+  var counter = 0;
+  var interval = setInterval(function(){
+      var message = parent.predefinedTestCommands[counter] + parent.commandFullStop;
       parent.socket.send(message);
-    }, 500*command)
-  }
+      counter++;
+      if(counter == commandsNumber) 
+        clearInterval(interval);
+  }, 500);
 };
 GUI.prototype.generateSteeringCommand = function(value) {
-  return this.commands.steering + value;
+  return this.commands._steering + ' ' + value;
 };
 GUI.prototype.generateTractionCommand = function(value) {
-  return this.commands.traction + value;
+  return this.commands._traction + ' ' + value;
+};
+GUI.prototype.generateRelayCommand = function(value) {
+  return this.commands._relay + ' ' + value;
+}
+GUI.prototype.toggleRelay = function() {
+  this.relayState = !this.relayState;
+  this.socket.send(this.generateRelayCommand(this.relayState)+this.commandFullStop);
+  return this.relayState;
 };
 
 $(document).ready(function(){
   var _GUI = new GUI();
 
   $(document).keydown(function(e){
-    if(_GUI.mode == 1) {
-      if(_GUI.pressedKeys.indexOf(e.keyCode) == -1)
+    console.log(_GUI.mode);
+    if(_GUI.mode == 1 || _GUI.mode == 2) {
+      if(_GUI.pressedKeys.indexOf(e.keyCode) == -1 || 
+        ((e.keyCode == 221 || e.keyCode == 219) && _GUI.mode == 2))
       {
         _GUI.pressedKeys.push(e.keyCode);
         _GUI.sendControlCommand();
+        if((e.keyCode == 221 || e.keyCode == 219) || _GUI.mode == 2)
+          _GUI.pressedKeys.pop();
       }
     }
   });
   $(document).keyup(function(e){
-    if(_GUI.mode == 1) {
+    if(_GUI.mode == 1 && _GUI.mode != 2) {
       var index = _GUI.pressedKeys.indexOf(e.keyCode);
       if(index != -1)
       {
@@ -260,6 +283,11 @@ $(document).ready(function(){
     _GUI.stop();
   }).on('click', '#autoButton', function(){
     _GUI.toggleAuto();
+  }).on('click', '#relayButton', function(){
+    _GUI.stop();
+    var relayState = _GUI.toggleRelay();
+    var text = "Relay " + (relayState == true ? "ON" : "OFF");
+    $('#relayButton').html(text);
   }).on('change', '#selectCommandMode', function(){
     var commandMode = $(this).val();
     _GUI.stop();
@@ -267,7 +295,3 @@ $(document).ready(function(){
   });
   //$(_GUI.GUIElements.batteryLevel).text(Math.floor(Math.random()*(100-80+1)+80));
 });
-
-
-
-

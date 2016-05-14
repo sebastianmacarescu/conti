@@ -3,6 +3,7 @@ import math
 import json
 import numpy as np
 
+USE_WINDOW = False
 
 class Line:
     def __init__(self, x1, y1, x2, y2):
@@ -40,6 +41,10 @@ def line_min_dist(a, b):
 def half(a, b):
     return (a + b) / 2
 
+if USE_WINDOW:
+    cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
+    cv2.namedWindow('gray', cv2.WINDOW_NORMAL)
+    cv2.namedWindow('after', cv2.WINDOW_NORMAL)
 
 def process_frame(frame):
     height, width, channels = frame.shape
@@ -51,7 +56,11 @@ def process_frame(frame):
     ret, gray = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY_INV)
 
     # gray = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 37, 15)
-    # cv2.imshow('frame', gray)
+    
+    if USE_WINDOW:
+        cv2.imshow('gray', gray)
+        cv2.imshow('frame', frame)
+       
 
     kernel = np.ones((9, 9), np.uint8)
     se1 = cv2.getStructuringElement(cv2.MORPH_RECT, (30,30))
@@ -61,7 +70,9 @@ def process_frame(frame):
     edges = cv2.Canny(gray, 100, 200)
     edges = cv2.blur(edges, (5, 5))
 
-    # cv2.imshow('frame', gray)
+    if USE_WINDOW:
+        cv2.imshow('after', gray)
+        cv2.waitKey(1)
     # lines = cv2.HoughLines(edges, 1, np.pi/180, 200)
 
     minLineLength = 100
@@ -113,10 +124,10 @@ def process_frame(frame):
             # px2 = (int)(px1 + length * np.sin(avg_angle * np.pi / 180))
             # py2 = (int)(py1 + length * np.cos(avg_angle * np.pi / 180))
 
-            cv2.line(frame, (px1, py1), (px2, py2), (0, 255, 0), 5)
+            # cv2.line(frame, (px1, py1), (px2, py2), (0, 255, 0), 5)
         
         total_avg_angle = total_avg_sum / ( rows * (rows + 2) / 2 )
-        print total_avg_angle
+        # print total_avg_angle
         px1 = (int)(width / 2)
         py1 = (int)(height / 2)
         px2 = px1 - (int)(10 * total_avg_angle)
